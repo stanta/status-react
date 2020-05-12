@@ -132,7 +132,7 @@
   (debounce/debounce-and-dispatch [:chat.ui/message-visibility-changed e] 5000))
 
 (defview messages-view
-  [{:keys [group-chat chat-id public?] :as chat}]
+  [{:keys [group-chat chat-id public?] :as chat} !message-view-height]
   (letsubs [messages           [:chats/current-chat-messages-stream]
             no-messages?       [:chats/current-chat-no-messages?]
             current-public-key [:multiaccount/public-key]]
@@ -149,7 +149,7 @@
                                         [message-datemark/chat-datemark (:value message)]
                                         (if (= type :gap)
                                           [gap/gap message idx messages-list-ref]
-                                          ; message content
+                                          ;; message content
                                           [message/chat-message
                                            (assoc message
                                                   :incoming-group (and group-chat (not outgoing))
@@ -157,6 +157,7 @@
                                                   :public? public?
                                                   :current-public-key current-public-key)])))
       :on-viewable-items-changed    on-viewable-items-changed
+      :on-layout #(reset! !message-view-height (-> ^js % .-nativeEvent .-layout .-height))
       :on-end-reached               #(re-frame/dispatch [:chat.ui/load-more-messages])
       :on-scroll-to-index-failed    #() ;;don't remove this
       :keyboard-should-persist-taps :handled}]))
@@ -178,14 +179,15 @@
 
 (defview chat []
   (letsubs [{:keys [chat-id show-input? group-chat] :as current-chat}
-            [:chats/current-chat]]
+            [:chats/current-chat]
+            !message-view-height (atom nil)]
     [react/view {:style {:flex 1}}
      [connectivity/connectivity
       [topbar current-chat]
       [react/view {:style {:flex 1}}
        (when-not group-chat
          [add-contact-bar chat-id])
-       [messages-view current-chat]]]
-     (when show-input?
-       [input/container])
+       [messages-view current-chat !message-view-height]
+       (when show-input?
+         [input/container !message-view-height])]]
      [bottom-sheet]]))
