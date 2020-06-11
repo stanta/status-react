@@ -447,9 +447,7 @@
     [react/view {:style {:flex 1}}
      [topbar/topbar
       {:navigation
-       {:icon                :main-icons/arrow-left
-        :accessibility-label :back-button
-        :handler             #(re-frame/dispatch [:intro-wizard/navigate-back])}}]
+       {:on-press #(re-frame/dispatch [:intro-wizard/navigate-back])}}]
      [react/view {:style {:flex            1
                           :justify-content :space-between}}
       [top-bar {:step :generate-key}]
@@ -463,8 +461,8 @@
     [react/view {:style {:flex 1}}
      [topbar/topbar
       {:navigation
-       {:label    :t/cancel
-        :handler #(re-frame/dispatch [:intro-wizard/navigate-back])}}]
+       {:label    (i18n/label :t/cancel)
+        :on-press #(re-frame/dispatch [:intro-wizard/navigate-back])}}]
      [react/view {:style {:flex 1
                           :justify-content :space-between}}
       [top-bar {:step :choose-key}]
@@ -478,12 +476,9 @@
      [topbar/topbar
       {:navigation
        (if (:recovering? wizard-state)
-         {:label   :t/cancel
-          :accessibility-label :back-button
-          :handler #(re-frame/dispatch [:intro-wizard/navigate-back])}
-         {:icon    :main-icons/arrow-left
-          :accessibility-label :back-button
-          :handler #(re-frame/dispatch [:intro-wizard/navigate-back])})}]
+         {:label   (i18n/label :t/cancel)
+          :on-press #(re-frame/dispatch [:intro-wizard/navigate-back])}
+         {:on-press #(re-frame/dispatch [:intro-wizard/navigate-back])})}]
      [react/view {:style {:flex 1
                           :justify-content :space-between}}
       [top-bar {:step :select-key-storage}]
@@ -496,9 +491,7 @@
     [react/keyboard-avoiding-view {:style {:flex 1}}
      [topbar/topbar
       {:navigation
-       {:icon    :main-icons/arrow-left
-        :accessibility-label :back-button
-        :handler #(re-frame/dispatch [:intro-wizard/navigate-back])}}]
+       {:on-press #(re-frame/dispatch [:intro-wizard/navigate-back])}}]
      [react/view {:style {:flex 1
                           :justify-content :space-between}}
       [top-bar {:step :create-code :encrypt-with-password? (:encrypt-with-password? wizard-state)}]
@@ -514,9 +507,7 @@
       {:navigation
        (if (:processing? wizard-state)
          :none
-         {:icon    :main-icons/arrow-left
-          :accessibility-label :back-button
-          :handler #(re-frame/dispatch [:intro-wizard/navigate-back])})}]
+         {:on-press #(re-frame/dispatch [:intro-wizard/navigate-back])})}]
      [react/view {:style {:flex 1
                           :justify-content :space-between}}
       [top-bar {:step :confirm-code :encrypt-with-password? (:encrypt-with-password? wizard-state)}]
@@ -530,9 +521,7 @@
     [react/keyboard-avoiding-view {:style {:flex 1}}
      [topbar/topbar
       {:navigation
-       {:icon    :main-icons/arrow-left
-        :accessibility-label :back-button
-        :handler #(re-frame/dispatch [:intro-wizard/navigate-back])}}]
+       {:on-press #(re-frame/dispatch [:intro-wizard/navigate-back])}}]
      [react/view {:style {:flex            1
                           :justify-content :space-between}}
       [top-bar {:step :enter-phrase}]
@@ -547,9 +536,7 @@
     [react/view {:style {:flex 1}}
      [topbar/topbar
       {:navigation
-       {:icon    :main-icons/arrow-left
-        :accessibility-label :back-button
-        :handler #(re-frame/dispatch [:intro-wizard/navigate-back])}}]
+       {:on-press #(re-frame/dispatch [:intro-wizard/navigate-back])}}]
      [react/view {:style {:flex 1
                           :justify-content :space-between}}
       [top-bar {:step :recovery-success}]

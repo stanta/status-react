@@ -8,7 +8,6 @@
             [status-im.ui.components.icons.vector-icons :as vector-icons]
             [status-im.ui.components.react :as react]
             [status-im.ui.components.styles :as components.styles]
-            [status-im.ui.components.toolbar.view :as toolbar]
             [status-im.ui.components.tooltip.views :as tooltip]
             [status-im.ui.components.topbar :as topbar]
             [status-im.ui.screens.hardwallet.pin.views :as pin.views]
@@ -106,16 +105,10 @@
             steps [:hardwallet-flow-steps]
             puk-code [:hardwallet-puk-code]]
     [react/view styles/container
-     [toolbar/toolbar
-      {:transparent? true}
-      [toolbar/nav-text
-       {:handler #(re-frame/dispatch [::hardwallet.onboarding/cancel-pressed])
-        :style   {:padding-left 21}}
-       (i18n/label :t/cancel)]
-      [react/text {:style               {:color colors/gray}
-                   :accessibility-label :cancel-keycard-setup}
-       (i18n/label :t/step-i-of-n {:step   "2"
-                                   :number steps})]]
+     [topbar/topbar {:navigation {:on-press #(re-frame/dispatch [::hardwallet.onboarding/cancel-pressed])
+                                  :label    (i18n/label :t/cancel)}
+                     :title      (i18n/label :t/step-i-of-n {:step   "2"
+                                                             :number steps})}]
      [react/scroll-view {:content-container-style {:flex-grow       1
                                                    :justify-content :space-between}}
       [react/view {:flex            1
@@ -148,10 +141,10 @@
              (i18n/label :t/puk-code)]]
            [react/view {:justify-content :flex-start
                         :flex            1}
-            [react/text {:style              {:typography  :header
-                                              :font-family "monospace"
-                                              :text-align  :center
-                                              :color       colors/blue}
+            [react/text {:style               {:typography  :header
+                                               :font-family "monospace"
+                                               :text-align  :center
+                                               :color       colors/blue}
                          :accessibility-label :puk-code}
              puk-code]]]]
          [react/view {:margin-top 16}
@@ -205,16 +198,11 @@
             small-screen? [:dimensions/small-screen?]
             setup-step [:hardwallet-setup-step]]
     [react/view styles/container
-     [toolbar/toolbar
-      {:transparent? true}
-      [toolbar/nav-text
-       {:handler #(re-frame/dispatch [::hardwallet.onboarding/cancel-pressed])
-        :style   {:padding-left 21}}
-       (i18n/label :t/cancel)]
-      (when-not (= setup-step :loading-keys)
-        [react/text {:style {:color colors/gray}}
-         (i18n/label :t/step-i-of-n {:number steps
-                                     :step   1})])]
+     [topbar/topbar {:navigation {:on-press #(re-frame/dispatch [::hardwallet.onboarding/cancel-pressed])
+                                  :label    (i18n/label :t/cancel)}
+                     :title      (when-not (= setup-step :loading-keys)
+                                   (i18n/label :t/step-i-of-n {:number steps
+                                                               :step   1}))}]
      [react/view {:flex            1
                   :flex-direction  :column
                   :justify-content :space-between
@@ -251,15 +239,11 @@
 (defview recovery-phrase []
   (letsubs [mnemonic [:hardwallet-mnemonic]]
     [react/view styles/container
-     [toolbar/toolbar
-      {:transparent? true}
-      [toolbar/nav-text
-       {:handler #(re-frame/dispatch [::hardwallet.onboarding/cancel-pressed])
-        :style   {:padding-left 21}}
-       (i18n/label :t/cancel)]
-      [react/text {:style {:color colors/gray}}
-       (i18n/label :t/step-i-of-n {:step   "3"
-                                   :number "3"})]]
+     [topbar/topbar
+      {:navigation {:on-press #(re-frame/dispatch [::hardwallet.onboarding/cancel-pressed])
+                    :label    (i18n/label :t/cancel)}
+       :title      (i18n/label :t/step-i-of-n {:step   "3"
+                                               :number "3"})}]
      [react/scroll-view {:content-container-style {:flex-grow       1
                                                    :justify-content :space-between}}
       [react/view {:flex-direction :column
@@ -298,7 +282,7 @@
                           :margin-left        12}
               [react/text {:style {:color colors/gray}}
                (str (inc i) ". ")]
-              [react/text {:accessibility-label  (str "word" i)}
+              [react/text {:accessibility-label (str "word" i)}
                word]])])]
        [react/view {:margin-top 24}
         [react/text {:style {:text-align :center}}
@@ -321,15 +305,9 @@
             error [:hardwallet-recovery-phrase-confirm-error]]
     (let [{:keys [idx]} word]
       [react/view styles/container
-       [toolbar/toolbar
-        {:transparent? true}
-        [toolbar/nav-text
-         {:handler             #(re-frame/dispatch [::hardwallet.onboarding/cancel-pressed])
-          :accessibility-label :cancel-keycard-setup
-          :style               {:padding-left 21}}
-         (i18n/label :t/cancel)]
-        [react/text {:style {:color colors/gray}}
-         (i18n/label :t/step-i-of-n {:step 3 :number 3})]]
+       [topbar/topbar {:navigation {:on-press #(re-frame/dispatch [::hardwallet.onboarding/cancel-pressed])
+                                    :label    (i18n/label :t/cancel)}
+                       :title      (i18n/label :t/step-i-of-n {:step 3 :number 3})}]
        [react/view {:flex            1
                     :flex-direction  :column
                     :justify-content :space-between

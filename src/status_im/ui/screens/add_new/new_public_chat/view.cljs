@@ -63,7 +63,9 @@
   (views/letsubs [topic [:public-group-topic]
                   error [:public-chat.new/topic-error-message]]
     [react/view {:style styles/group-container}
-     [topbar/topbar {:title :t/new-public-group-chat :modal? true}]
+     [topbar/topbar {:use-insets false
+                     :title      (i18n/label :t/new-public-group-chat)
+                     :modal?     true}]
      [react/scroll-view {:style {:flex 1}}
       [react/view {:padding-horizontal 16}
        [react/view {:align-items :center :padding-vertical 12}

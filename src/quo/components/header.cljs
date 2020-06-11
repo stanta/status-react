@@ -12,6 +12,7 @@
 
 (defn header-wrapper-style [{:keys [height border-bottom]}]
   (merge
+   (:x-tiny spacing/padding-horizontal)
    {:background-color (:ui-background @colors/theme)
     :height           height}
    (when border-bottom
@@ -49,9 +50,10 @@
    (case title-align
      :left {:left  (:width left)
             :right (:width right)}
-     {:align-items :center
-      :left        (max (:width left) (:width right))
-      :right       (max (:width left) (:width right))})))
+     {:align-items     :center
+      :justify-content :center
+      :left            (max (:width left) (:width right))
+      :right           (max (:width left) (:width right))})))
 
 (def header-actions-style
   (merge
@@ -59,7 +61,7 @@
     :flex-direction     :row
     :align-items        :center
     :justify-content    :center}
-   (:tiny spacing/padding-horizontal)))
+   (:x-tiny spacing/padding-horizontal)))
 
 (def header-action-placeholder
   {:width (:base spacing/spacing)})
@@ -75,14 +77,16 @@
               :justify-content    :center
               :flex               1})
 
-(defn header-action [{:keys [icon label on-press accessibility-label]}]
-  [rn/touchable-opacity {:on-press on-press}
+(defn header-action [{:keys [icon label on-press disabled accessibility-label]}]
+  [rn/touchable-opacity {:on-press on-press
+                         :disabled disabled}
    [rn/view (merge {:style header-icon-touchable}
                    (when accessibility-label
                      {:accessibility-label accessibility-label}))
     (cond
       icon  [icons/icon icon {:color (:icon-01 @colors/theme)}]
-      label [text/text {:color :link} label])]])
+      label [text/text {:color (if disabled :secondary :link)}
+             label])]])
 
 (defn header-actions [{:keys [accessories component]}]
   [rn/view {:style element}
@@ -107,19 +111,20 @@
                   :number-of-lines 1}
        title]
       [text/text {:weight          :regular
+                  :color           :secondary
                   :number-of-lines 1}
        subtitle]]
 
      title [text/text {:weight          :bold
-                       :number-of-lines 2
+                       :number-of-lines 0
                        :align           title-align
                        :size            :large}
             title])])
 
-(defn header []
-  (let [layout        (reagent/atom {:left  {:width  8
+(defn header [{:keys [left-width right-width]}]
+  (let [layout        (reagent/atom {:left  {:width  (or left-width 8)
                                              :height header-height}
-                                     :right {:width  8
+                                     :right {:width  (or right-width 8)
                                              :height header-height}
                                      :title {:width  0
                                              :height header-height}})

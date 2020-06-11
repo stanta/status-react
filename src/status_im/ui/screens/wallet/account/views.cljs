@@ -23,9 +23,9 @@
 (defn toolbar-view [title]
   [topbar/topbar
    {:title title
-    :accessories
-    [{:icon    :main-icons/more
-      :handler #(re-frame/dispatch [:bottom-sheet/show-sheet
+    :right-accessories
+    [{:icon     :main-icons/more
+      :on-press #(re-frame/dispatch [:bottom-sheet/show-sheet
                                     {:content        sheets/account-settings
                                      :content-height 60}])}]}])
 

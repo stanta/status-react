@@ -30,7 +30,7 @@
           invalid-url? (contains? validation-errors :url)]
       [react/view styles/container
        [react/keyboard-avoiding-view components.styles/flex
-        [topbar/topbar {:title (if id :t/bootnode-details :t/add-bootnode)}]
+        [topbar/topbar {:title (i18n/label (if id :t/bootnode-details :t/add-bootnode))}]
         [react/scroll-view {:keyboard-should-persist-taps :handled}
          [react/view styles/edit-bootnode-view
           [react/view {:padding-vertical 8}

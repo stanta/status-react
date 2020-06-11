@@ -50,7 +50,7 @@
           invalid-url? (contains? validation-errors :url)]
       [react/view components.styles/flex
        [react/keyboard-avoiding-view components.styles/flex
-        [topbar/topbar {:title (if id :t/mailserver-details :t/add-mailserver)}]
+        [topbar/topbar {:title (i18n/label (if id :t/mailserver-details :t/add-mailserver))}]
         [react/scroll-view {:keyboard-should-persist-taps :handled}
          [react/view styles/edit-mailserver-view
           [react/view {:padding-vertical 8}

@@ -88,7 +88,7 @@
                   auth-method              [:auth-method]
                   keycard-multiaccount?    [:keycard-multiaccount?]]
     [react/view {:flex 1 :background-color colors/white}
-     [topbar/topbar {:title :t/privacy-and-security}]
+     [topbar/topbar {:title (i18n/label :t/privacy-and-security)}]
      [list/flat-list
       {:data      (list-data mnemonic preview-privacy? supported-biometric-auth
                              (= auth-method "biometric") keycard-multiaccount?)

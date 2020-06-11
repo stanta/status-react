@@ -75,7 +75,7 @@
 
 (defn members-list [{:keys [chat-id admin? current-pk allow-adding-members?]}]
   [react/view
-   [list-item/list-item {:title :t/members-title :type :section-header}]
+   [list-item/list-item {:title (i18n/label :t/members-title) :type :section-header}]
    (when allow-adding-members?
      [list-item/list-item
       {:title    :t/add-members

@@ -1,6 +1,7 @@
 (ns status-im.ui.screens.sync-settings.views
   (:require-macros [status-im.utils.views :as views])
   (:require [re-frame.core :as re-frame]
+            [status-im.i18n :as i18n]
             [status-im.ui.components.colors :as colors]
             [status-im.ui.components.list.views :as list]
             [status-im.ui.components.react :as react]
@@ -50,7 +51,7 @@
   (views/letsubs [{:keys [syncing-on-mobile-network?]} [:multiaccount]
                   mailserver-id                        [:mailserver/current-id]]
     [react/view {:flex 1 :background-color colors/white}
-     [topbar/topbar {:title :t/sync-settings}]
+     [topbar/topbar {:title (i18n/label :t/sync-settings)}]
      [list/flat-list
       {:data      (list-data mailserver-id syncing-on-mobile-network?)
        :key-fn    (fn [_ i] (str i))

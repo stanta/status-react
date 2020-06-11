@@ -1,5 +1,6 @@
 (ns status-im.ui.screens.advanced-settings.views
   (:require [re-frame.core :as re-frame]
+            [status-im.i18n :as i18n]
             [status-im.ui.components.colors :as colors]
             [status-im.ui.components.list.views :as list]
             [status-im.ui.components.react :as react]
@@ -133,7 +134,7 @@
                   current-log-level        [:log-level/current-log-level]
                   current-fleet            [:fleets/current-fleet]]
     [react/view {:flex 1}
-     [topbar/topbar {:title :t/advanced}]
+     [topbar/topbar {:title (i18n/label :t/advanced)}]
      [list/flat-list
       {:data      (flat-list-data
                    {:network-name network-name

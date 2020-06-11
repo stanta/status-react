@@ -1,8 +1,7 @@
 (ns status-im.ui.screens.profile.seed.views
   (:require-macros [status-im.utils.views :refer [defview letsubs]])
   (:require [status-im.ui.components.react :as react]
-            [status-im.ui.components.toolbar.view :as toolbar]
-            [status-im.ui.components.toolbar.actions :as actions]
+            [status-im.ui.components.topbar :as topbar]
             [status-im.react-native.resources :as resources]
             [status-im.ui.components.common.common :as components.common]
             [re-frame.core :as re-frame]
@@ -140,18 +139,14 @@
   (letsubs [current-multiaccount [:multiaccount]
             {:keys [step first-word second-word error word]} [:my-profile/recovery]]
     [react/keyboard-avoiding-view {:style {:flex 1}}
-     [toolbar/toolbar
-      nil
-      (when-not (= :finish step)
-        (toolbar/nav-button (actions/back #(step-back step))))
-      [react/view
-       [react/text {:style styles/backup-seed}
-        (i18n/label :t/backup-recovery-phrase)]
-       [react/text {:style styles/step-n}
-        (i18n/label :t/step-i-of-n {:step (steps-numbers step) :number 3})]]]
+     [topbar/topbar {:title      (i18n/label :t/backup-recovery-phrase)
+                     :subtitle   (i18n/label :t/step-i-of-n {:step (steps-numbers step) :number 3})
+                     :navigation (if (= :finish step)
+                                   :none
+                                   {:on-press #(step-back step)})}]
      (case step
-       :intro [intro]
-       :12-words [twelve-words current-multiaccount]
-       :first-word [enter-word step first-word error word]
+       :intro       [intro]
+       :12-words    [twelve-words current-multiaccount]
+       :first-word  [enter-word step first-word error word]
        :second-word [enter-word step second-word error word]
-       :finish [finish])]))
+       :finish      [finish])]))

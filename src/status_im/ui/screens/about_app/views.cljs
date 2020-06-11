@@ -1,5 +1,6 @@
 (ns status-im.ui.screens.about-app.views
   (:require [re-frame.core :as re-frame]
+            [status-im.i18n :as i18n]
             [status-im.ui.components.colors :as colors]
             [status-im.ui.components.copyable-text :as copyable-text]
             [status-im.ui.components.icons.vector-icons :as vector-icons]
@@ -55,7 +56,7 @@
   (views/letsubs [app-version  [:get-app-short-version]
                   node-version [:get-app-node-version]]
     [react/view {:flex 1 :background-color colors/white}
-     [topbar/topbar {:title :t/about-app}]
+     [topbar/topbar {:title (i18n/label :t/about-app)}]
      [list/flat-list
       {:data      (data app-version node-version)
        :key-fn    (fn [_ i] (str i))

@@ -21,9 +21,10 @@
 (views/defview appearance []
   (views/letsubs [{:keys [appearance]} [:multiaccount]]
     [react/view {:flex 1}
-     [topbar/topbar {:title :t/appearance :show-border? true}]
+     [topbar/topbar {:title         (i18n/label :t/appearance)
+                     :border-bottom true}]
      [list-item/list-item {:type :section-header :title :t/preference :container-margin-top 8}]
-     [react/view {:flex-direction  :row :flex 1 :padding-horizontal 8
+     [react/view {:flex-direction  :row           :flex       1 :padding-horizontal 8
                   :justify-content :space-between :margin-top 16}
       [button :t/light :theme-light 1 (= 1 appearance)]
       [button :t/dark :theme-dark 2 (= 2 appearance)]
