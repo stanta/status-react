@@ -7,6 +7,7 @@ react-native-community_masked-view
 react-native-community_netinfo
 react-native-config
 react-native-dark-mode
+react-native-device-info
 react-native-dialogs
 react-native-fs
 react-native-gesture-handler

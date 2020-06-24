@@ -182,6 +182,9 @@
                       :addEventListener (fn []),
                       :removeEventListener (fn [])}}))
 
+(def react-native-device-info
+  #js {:getInstallReferrer identity})
+
 ;; Update i18n_resources.cljs
 (defn mock [module]
   (case module
@@ -209,6 +212,7 @@
     "react-native-mail" react-native-mail
     "react-native-image-resizer" image-resizer
     "react-native-haptic-feedback" react-native-haptic-feedback
+    "react-native-device-info" react-native-device-info
     "./fleets.js" default-fleets
     "./chats.js" default-chats
     "../translations/ar.json" (js/JSON.parse (slurp "./translations/ar.json"))
