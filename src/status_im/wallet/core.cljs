@@ -126,7 +126,7 @@
 (re-frame/reg-fx
  :wallet/validate-tokens
  (fn [tokens]
-   (doseq [token tokens]
+   (doseq [token (vals tokens)]
      (validate-token-decimals! token)
      (validate-token-symbol! token)
      (validate-token-name! token))))
