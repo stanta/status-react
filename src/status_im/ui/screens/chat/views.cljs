@@ -55,6 +55,7 @@
 (defn chat-intro [{:keys [chat-id
                           chat-name
                           group-chat
+                          group-chat-status
                           contact-name
                           public?
                           color
@@ -74,6 +75,7 @@
    ;; Description section
    (if group-chat
      [chat.group/group-chat-description-container {:chat-id chat-id
+                                                   :group-chat-status group-chat-status
                                                    :loading-messages? loading-messages?
                                                    :chat-name chat-name
                                                    :public? public?
@@ -90,7 +92,7 @@
     (chat-intro (assoc opts :contact-name contact-name))))
 
 (defn chat-intro-header-container
-  [{:keys [group-chat
+  [{:keys [group-chat group-chat-status
            might-have-join-time-messages?
            color chat-id chat-name
            public?]}
@@ -105,6 +107,7 @@
    (let [opts
          {:chat-id chat-id
           :group-chat group-chat
+          :group-chat-status group-chat-status
           :chat-name chat-name
           :public? public?
           :color color
@@ -132,7 +135,7 @@
   (debounce/debounce-and-dispatch [:chat.ui/message-visibility-changed e] 5000))
 
 (defview messages-view
-  [{:keys [group-chat chat-id public?] :as chat}]
+  [{:keys [group-chat group-chat-status chat-id public?] :as chat}]
   (letsubs [messages           [:chats/current-chat-messages-stream]
             no-messages?       [:chats/current-chat-no-messages?]
             current-public-key [:multiaccount/public-key]]
@@ -140,7 +143,7 @@
      {:key-fn                       #(or (:message-id %) (:value %))
       :ref                          #(reset! messages-list-ref %)
       :header                       (when (and group-chat (not public?))
-                                      [chat.group/group-chat-footer chat-id])
+                                      [chat.group/group-chat-footer chat-id group-chat-status])
       :footer                       [chat-intro-header-container chat no-messages?]
       :data                         messages
       :inverted                     true

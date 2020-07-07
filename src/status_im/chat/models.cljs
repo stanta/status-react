@@ -14,7 +14,8 @@
             [status-im.utils.clocks :as utils.clocks]
             [status-im.utils.fx :as fx]
             [status-im.utils.utils :as utils]
-            [status-im.chat.models.loading :as loading]))
+            [status-im.chat.models.loading :as loading]
+            [clojure.string :as string]))
 
 (defn- get-chat [cofx chat-id]
   (get-in cofx [:db :chats chat-id]))
@@ -127,6 +128,25 @@
                                        %
                                        chats))}
               (transport.filters/load-chats filtered-chats))))
+
+(fx/defn add-group-chat-from-link
+  "Add chat to db and update"
+  [{:keys [db] :as cofx} link-params]
+  (let [[admin-pk chat-name chat-id] (string/split link-params #"&")]
+    ;;TODO not sure if chat already exists should we just do nothing?
+    ;;TODO save chat to status-go
+    {:db (assoc-in db [:chats chat-id] {:chat-name chat-name
+                                        :identicon ""
+                                        :color "#FE8F59" ;; TODO where to get color?
+                                        :last-clock-value   0 ;;TODO?
+                                        :name chat-name
+                                        :unviewed-messages-count 0
+                                        :is-active true
+                                        :group-chat-status :link-opened
+                                        :group-chat true
+                                        :public? false
+                                        :chat-id chat-id
+                                        :deleted-at-clock-value 0})}))
 
 (fx/defn upsert-chat
   "Upsert chat when not deleted"

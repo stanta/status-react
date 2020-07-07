@@ -12,7 +12,12 @@
             [status-im.ui.screens.chat.sheets :as chat.sheets]
             [status-im.ui.screens.profile.components.styles
              :as
-             profile.components.styles])
+             profile.components.styles]
+            [status-im.ui.components.topbar :as topbar]
+            [status-im.ui.components.colors :as colors]
+            [status-im.ui.components.copyable-text :as copyable-text]
+            [status-im.ui.components.list-selection :as list-selection]
+            [status-im.utils.universal-links.core :as universal-links])
   (:require-macros [status-im.utils.views :refer [defview letsubs]]))
 
 (defn member-sheet [chat-id member us-admin?]
@@ -85,6 +90,31 @@
        :on-press #(re-frame/dispatch [:navigate-to :add-participants-toggle-list])}])
    [chat-group-members-view chat-id admin? current-pk]])
 
+(defview group-chat-invite []
+  (letsubs [{:keys [admins chat-id joined? chat-name color contacts] :as current-chat} [:chats/current-chat]
+            members      [:contacts/current-chat-contacts]
+            current-pk   [:multiaccount/public-key]]
+    (let [invite-link (universal-links/generate-link
+                       :group
+                       :external
+                       (str current-pk "&" chat-name "11" "&" chat-id))]
+      [react/view {:flex 1}
+       [topbar/topbar {:title       "Group invite"
+                       :accessories [{:icon    :main-icons/share
+                                      :handler #(list-selection/open-share {:message invite-link})}]}]
+       [react/view {:padding-horizontal 16 :margin-top 26}
+        [react/text {:style {:color colors/gray}} "Group invite link"]
+        [copyable-text/copyable-text-view
+         {:copied-text invite-link}
+         [react/view {:border-width 1 :border-color colors/gray-lighter
+                      :justify-content :center :margin-top 10
+                      :border-radius 8 :padding-horizontal 16 :padding-vertical 11}
+          [react/text invite-link]]]
+        [react/text {:style {:color colors/gray :margin-top 22}}
+         "Pending invitations"]
+        [react/text {:style {:color colors/gray :margin-top 28 :text-align :center}}
+         "People who wish to join the group\nvia an invite link will appear here"]]])))
+
 (defview group-chat-profile []
   (letsubs [{:keys [admins chat-id joined? chat-name color contacts] :as current-chat} [:chats/current-chat]
             members      [:contacts/current-chat-contacts]
@@ -109,6 +139,13 @@
                                 :subtitle      (i18n/label :t/members-count {:count (count contacts)})
                                 :subtitle-icon :icons/tiny-group})}
           [react/view profile.components.styles/profile-form
+           (when admin?
+             [quo/list-item
+              {:chevron true
+               :title               "Group invite"
+               :accessibility-label :invite-chat-button
+               :icon                :main-icons/share
+               :on-press            #(re-frame/dispatch [:navigate-to :group-chat-invite])}])
            (when joined?
              [quo/list-item
               {:theme               :negative

@@ -23,6 +23,7 @@
 (def public-chat-regex #"(?:https?://join\.)?status[.-]im(?::/)?/(?:chat/public/([a-z0-9\-]+)$|([a-z0-9\-]+))$")
 (def profile-regex #"(?:https?://join\.)?status[.-]im(?::/)?/(?:u/(0x.*)$|u/(.*)$|user/(.*))$")
 (def browse-regex #"(?:https?://join\.)?status[.-]im(?::/)?/(?:b/(.*)$|browse/(.*))$")
+(def group-regex #"(?:https?://join\.)?status[.-]im(?::/)?/(?:g/(.*)$)")
 
 ;; domains should be without the trailing slash
 (def domains {:external "https://join.status.im"
@@ -31,7 +32,8 @@
 (def links {:public-chat "%s/%s"
             :private-chat "%s/p/%s"
             :user        "%s/u/%s"
-            :browse      "%s/b/%s"})
+            :browse      "%s/b/%s"
+            :group      "%s/g/%s"})
 
 (defn generate-link [link-type domain-type param]
   (gstring/format (get links link-type)
@@ -61,6 +63,10 @@
   (log/info "universal-links: handling browse" url)
   (when (security/safe-link? url)
     {:browser/show-browser-selection url}))
+
+(fx/defn handle-group [cofx link-params]
+  (log/info "universal-links: handling group" link-params)
+  (chat/add-group-chat-from-link cofx link-params))
 
 (fx/defn handle-private-chat [cofx chat-id]
   (log/info "universal-links: handling private chat" chat-id)
@@ -127,6 +133,9 @@
 
     (match-url url browse-regex)
     (handle-browse cofx (match-url url browse-regex))
+
+    (match-url url group-regex)
+    (handle-group cofx (match-url url group-regex))
 
     (is-request-url? url)
     (handle-eip681 cofx url)
