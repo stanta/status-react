@@ -48,29 +48,7 @@
 
 static RCTBridge *bridge;
 
-@implementation Status
-
-- (instancetype)init {
-    self = [super init];
-    if (!self) {
-        return nil;
-    }
-    // Subscribing to the signals from Status-Go
-    StatusgoSetMobileSignalHandler(self);
-    return self;
-}
-
--(RCTBridge *)bridge
-{
-    return bridge;
-}
-
--(void)setBridge:(RCTBridge *)newBridge
-{
-    bridge = newBridge;
-}
-
-- (void)handleSignal:(NSString *)signal
+void handleSignal(NSString *signal)
 {
     if(!signal){
 #if DEBUG
@@ -87,6 +65,29 @@ static RCTBridge *bridge;
 
     return;
 }
+@implementation Status
+
+- (instancetype)init {
+    self = [super init];
+    if (!self) {
+        return nil;
+    }
+    // Subscribing to the signals from Status-Go
+    StatusgoSetMobileSignalHandler(self);
+    setSignalEventCallback(&handleSignal);
+    return self;
+}
+
+-(RCTBridge *)bridge
+{
+    return bridge;
+}
+
+-(void)setBridge:(RCTBridge *)newBridge
+{
+    bridge = newBridge;
+}
+
 
 RCT_EXPORT_MODULE();
 
