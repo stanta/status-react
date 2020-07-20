@@ -139,6 +139,8 @@ in stdenv.mkDerivation rec {
     # Fixes issue with failing to load libnative-platform.so
     export GRADLE_USER_HOME=$(mktemp -d)
 
+    env | grep '^ANDROID'
+
     pushd ./android
     ${adhocEnvVars} ${pkgs.gradle}/bin/gradle \
       ${toString gradleOpts} \
