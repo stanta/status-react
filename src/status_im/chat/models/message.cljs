@@ -5,7 +5,6 @@
             [status-im.chat.models.message-content :as message-content]
             [status-im.chat.models.message-list :as message-list]
             [status-im.constants :as constants]
-            [status-im.chat.models.reactions :as reactions]
             [status-im.data-store.messages :as data-store.messages]
             [status-im.ethereum.json-rpc :as json-rpc]
             [status-im.multiaccounts.model :as multiaccounts.model]
@@ -82,11 +81,9 @@
       (if (or (not @view.state/first-not-visible-item)
               (<= (:clock-value @view.state/first-not-visible-item)
                   clock-value))
-        (if (reactions/reaction-message? message)
-          (reactions/process-reactions cofx message)
-          (add-message cofx {:message       message
-                             :seen-by-user? (and current-chat?
-                                                 (= view-id :chat))}))
+        (add-message cofx {:message       message
+                           :seen-by-user? (and current-chat?
+                                               (= view-id :chat))})
         ;; Not in the current view, set all-loaded to false
         ;; and offload to db and update cursor if necessary
         {:db (cond-> (assoc-in db [:chats chat-id :all-loaded?] false)

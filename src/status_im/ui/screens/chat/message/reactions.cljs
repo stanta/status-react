@@ -20,6 +20,12 @@
                   :width  width
                   :height height})))))
 
+(defn- extract-id [reactions id]
+  (->> reactions
+       (filter (fn [{:keys [emoji-id]}] (= emoji-id id)))
+       first
+       :emoji-reaction-id))
+
 (defn with-reaction-picker []
   (let [ref              (react/create-ref)
         animated-state   (animated/value 0)
@@ -43,11 +49,17 @@
         on-open          (fn [pos]
                            (reset! position pos)
                            (reset! visible true))]
-    (fn [{:keys [message render send-emoji]}]
-      (let [reactions     @(re-frame/subscribe [:chats/message-reactions (:message-id message)])
-            own-reactions (reduce (fn [acc {:keys [emoji-id own]}]
-                                    (if own (conj acc emoji-id) acc))
-                                  [] reactions)]
+    (fn [{:keys [message render send-emoji retract-emoji]}]
+      (let [reactions      @(re-frame/subscribe [:chats/message-reactions (:message-id message)])
+            own-reactions  (reduce (fn [acc {:keys [emoji-id own]}]
+                                     (if own (conj acc emoji-id) acc))
+                                   [] reactions)
+            on-emoji-press (fn [emoji-id]
+                             (let [active ((set own-reactions) emoji-id)]
+                               (if active
+                                 (retract-emoji {:emoji-id          emoji-id
+                                                 :emoji-reaction-id (extract-id reactions emoji-id)})
+                                 (send-emoji {:emoji-id emoji-id}))))]
         [:<>
          [animated/view {:style {:opacity (animated/mix animation 1 0)}}
           [rn/view {:ref         ref
@@ -74,7 +86,7 @@
                                   :own-reactions  own-reactions
                                   :send-emoji     (fn [emoji]
                                                     (on-close)
-                                                    (js/setTimeout #(send-emoji emoji)
+                                                    (js/setTimeout #(on-emoji-press emoji)
                                                                    reaction-picker/animation-duration))}
            [render message {:modal       true
                             :close-modal on-close}]]]]))))

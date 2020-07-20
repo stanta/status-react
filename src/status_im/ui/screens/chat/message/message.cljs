@@ -5,7 +5,7 @@
             [status-im.ui.components.colors :as colors]
             [status-im.ui.components.icons.vector-icons :as vector-icons]
             [status-im.ui.components.react :as react]
-            [status-im.chat.models.input :as models]
+            [status-im.chat.models.reactions :as models.reactions]
             [status-im.ui.screens.chat.message.command :as message.command]
             [status-im.ui.screens.chat.photos :as photos]
             [status-im.ui.screens.chat.sheets :as sheets]
@@ -323,7 +323,14 @@
 
 (defn chat-message [message]
   [reactions/with-reaction-picker
-   {:message    message
-    :send-emoji #(re-frame/dispatch [::models/send-emoji-reaction {:message-id (:message-id message)
-                                                                   :emoji-id   %}])
-    :render     ->message}])
+   {:message       message
+    :send-emoji    (fn [{:keys [emoji-id]}]
+                     (re-frame/dispatch [::models.reactions/send-emoji-reaction
+                                         {:message-id (:message-id message)
+                                          :emoji-id   emoji-id}]))
+    :retract-emoji (fn [{:keys [emoji-id emoji-reaction-id]}]
+                     (re-frame/dispatch [::models.reactions/send-retract-emoji-reaction
+                                         {:message-id        (:message-id message)
+                                          :emoji-id          emoji-id
+                                          :emoji-reaction-id emoji-reaction-id}]))
+    :render        ->message}])

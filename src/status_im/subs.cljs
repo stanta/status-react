@@ -644,13 +644,19 @@
 
 (re-frame/reg-sub
  :chats/message-reactions
+ :<- [:multiaccount/public-key]
  :<- [:chats/current-chat-reactions]
- (fn [reactions [_ message-id]]
-   (mapv (fn [[emoji-id messages]]
-           {:emoji-id emoji-id
-            :own      (= 1 emoji-id) ; FIXME
-            :quantity (count messages)})
-         (get reactions message-id))))
+ (fn [[current-public-key reactions] [_ message-id]]
+   (map (fn [[emoji-id reactions]]
+          ;; NOTE: There is a risk of performance issues, think how to store theme more performant
+          ;; one way could be storing the own emojis in a separate map
+          (let [active (filter (comp not :retracted second) reactions)
+                own    (first (filter (fn [[_ {:keys [from]}]] (= from current-public-key)) active))]
+            {:emoji-id          emoji-id
+             :own               (seq own)
+             :emoji-reaction-id (second own)
+             :quantity          (count reactions)}))
+        (get reactions message-id))))
 
 (re-frame/reg-sub
  :chats/messages-gaps

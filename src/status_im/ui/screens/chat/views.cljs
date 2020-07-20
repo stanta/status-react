@@ -164,7 +164,8 @@
        :on-viewable-items-changed    on-viewable-items-changed
        :on-end-reached               #(re-frame/dispatch [:chat.ui/load-more-messages])
        :on-scroll-to-index-failed    #() ;;don't remove this
-       :content-container-style      {:padding-top @bottom-space}
+       :content-container-style      {:padding-top    (+ @bottom-space 16)
+                                      :padding-bottom 16}
        :scrollIndicatorInsets        {:top @bottom-space}
        :keyboardDismissMode          "interactive"
        :keyboard-should-persist-taps :handled})]))

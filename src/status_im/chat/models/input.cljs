@@ -117,23 +117,6 @@
                                                :pack pack}
                                      :text    "Update to latest version to see a nice sticker here!"})))
 
-(fx/defn send-emoji-reaction-message
-  {:events [::send-emoji-reaction]}
-  [{{:keys [current-chat-id] :as db} :db :as cofx} {:keys [message-id emoji-id]}]
-  (chat.message/send-message cofx {:chat-id        current-chat-id
-                                   :content-type   constants/content-type-emoji-reaction
-                                   :emoji-reaction {:message_id message-id
-                                                    :type       emoji-id}
-                                   :text           "Update to latest version to see a nice emoji reaction!"}))
-
-(fx/defn send-retract-emoji-reaction-message
-  {:events [::send-emoji-reaction-retraction]}
-  [{{:keys [current-chat-id] :as db} :db :as cofx} {:keys [message-id emoji-id]}]
-  (chat.message/send-message cofx {:chat-id        current-chat-id
-                                   :content-type   constants/content-type-emoji-reaction-retraction
-                                   :emoji-reaction {:emoji_reaction_id message-id}
-                                   :text           "Update to latest version to see a nice emoji reaction!"}))
-
 (fx/defn send-current-message
   "Sends message from current chat input"
   [{{:keys [current-chat-id] :as db} :db :as cofx}]
