@@ -329,7 +329,7 @@
                                          {:message-id (:message-id message)
                                           :emoji-id   emoji-id}]))
     :retract-emoji (fn [{:keys [emoji-id emoji-reaction-id]}]
-                     (re-frame/dispatch [::models.reactions/send-retract-emoji-reaction
+                     (re-frame/dispatch [::models.reactions/send-emoji-reaction-retraction
                                          {:message-id        (:message-id message)
                                           :emoji-id          emoji-id
                                           :emoji-reaction-id emoji-reaction-id}]))

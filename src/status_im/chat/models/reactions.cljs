@@ -4,15 +4,22 @@
             [status-im.utils.fx :as fx]
             [status-im.waku.core :as waku]
             [taoensso.timbre :as log]
+            [status-im.multiaccounts.model :as multiaccounts.model]
             [status-im.transport.message.protocol :as message.protocol]
             [status-im.data-store.reactions :as data-store.reactions]))
 
 (defn process-reactions
   [reactions new-reactions]
+  ;; TODO(Ferossgp): handling own reaction in subscription could be expensive,
+  ;; for better performance we can here separate own reaction into 2 maps
   (reduce
-   (fn [acc {:keys [chat-id message-id emoji-id emoji-reaction-id]
+   (fn [acc {:keys [chat-id message-id emoji-id emoji-reaction-id retracted]
              :as   reaction}]
-     (assoc-in acc [chat-id message-id emoji-id emoji-reaction-id] reaction))
+     ;; NOTE(Ferossgp): For a better performance, better to not keep in db all retracted reactions
+     ;; retraction will always come after the reaction so there shouldn't be a conflict
+     (if retracted
+       (update-in acc [chat-id message-id emoji-id] dissoc emoji-reaction-id)
+       (assoc-in acc [chat-id message-id emoji-id emoji-reaction-id] reaction)))
    reactions
    new-reactions))
 
@@ -79,10 +86,16 @@
 
 (fx/defn reaction-sent
   {:events [:transport/reaction-sent]}
-  [{:keys [db]} reaction]
-  {:db (update db :reactions process-reactions [reaction])})
+  [{:keys [db] :as cofx} reaction id]
+  (let [current-public-key  (multiaccounts.model/current-public-key cofx)
+        optimistic-reaction (assoc reaction
+                                   :emoji-reaction-id id
+                                   :from  current-public-key
+                                   :retracted false)]
+    {:db (update db :reactions process-reactions [optimistic-reaction])}))
 
 (fx/defn retraction-sent
   {:events [:transport/retraction-sent]}
   [{:keys [db]} reaction]
-  {:db (update db :reactions process-reactions [(assoc reaction :retracted true)])})
+  (let [optimistic (assoc reaction :retracted true)]
+    {:db (update db :reactions process-reactions [optimistic])}))
