@@ -17,7 +17,8 @@
             ["react-native-device-info" :refer [getInstallReferrer]]
             ["@react-native-community/async-storage" :default async-storage]))
 
-(def advertiser-type "advertiser")
+(def advertiser-type "acquisition/advertiser")
+(def tx-store-key "acquisition/watch-tx")
 
 (def acquisition-gateway "https://test-referral.status.im")
 
@@ -92,19 +93,46 @@
                  (log/error "[async-storage]" error))))))
 
 (re-frame/reg-fx
+ ::set-wtach-tx
+ (fn [tx]
+   (-> ^js async-storage
+       (.setItem tx-store-key tx)
+       (.catch (fn [error]
+                 (log/error "[async-storage]" error))))))
+
+(fx/defn add-tx-watcher
+  [cofx tx]
+  (transaction/watch-transaction cofx
+                                 tx
+                                 {:trigger-fn (constantly true)
+                                  :on-trigger
+                                  (fn []
+                                    {:dispatch [::success-tx-received]})}))
+
+(re-frame/reg-fx
+ ::check-tx-state
+ (fn []
+   (-> ^js async-storage
+       (.getItem tx-store-key)
+       (.then (fn [^js tx]
+                (when-not (nil? tx)
+                  (re-frame/dispatch [::add-tx-watcher tx]))))
+       (.catch (fn [error]
+                 (log/error "[async-storage]" error))))))
+
+(re-frame/reg-fx
  ::get-referrer
  (fn [external-referrer]
    (-> ^js async-storage
        (.getItem referrer-decision-key)
        (.then (fn [^js data]
-                (when (nil? data)
-                  (if external-referrer
-                    (re-frame/dispatch [::has-referrer data external-referrer])
-                    (-> (getInstallReferrer)
-                        (.then (fn [install-referrer]
-                                 (when (and (seq (parse-referrer install-referrer))
-                                            (not= install-referrer "unknown"))
-                                   (re-frame/dispatch [::has-referrer data  (parse-referrer install-referrer)])))))))))
+                (if external-referrer
+                  (re-frame/dispatch [::has-referrer data external-referrer])
+                  (-> (getInstallReferrer)
+                      (.then (fn [install-referrer]
+                               (when (and (seq (parse-referrer install-referrer))
+                                          (not= install-referrer "unknown"))
+                                 (re-frame/dispatch [::has-referrer data  (parse-referrer install-referrer)]))))))))
        (.catch (fn [error]
                  (log/error "[async-storage]" error))))))
 
@@ -121,22 +149,18 @@
 (fx/defn success-tx-received
   {:events [::success-tx-received]}
   [_]
-  {::notifications/local-notification {:title   (i18n/label :t/starter-pack-received)
+  {::set-referrer-decision            "claimed"
+   ::notifications/local-notification {:title   (i18n/label :t/starter-pack-received)
                                        :message (i18n/label :t/starter-pack-received-description)}})
 
 (fx/defn success-advertiser-claim
   {:events [::success-advertiser-claim]}
   [cofx {:keys [tx]}]
   (fx/merge cofx
-            ;; TODO(Ferossgp): Watches are not persistent,
-            ;; in case of app restart we should check and re add watch
-            (transaction/watch-transaction tx
-                                           {:trigger-fn (constantly true)
-                                            :on-trigger
-                                            (fn []
-                                              {:dispatch [::success-tx-received]})})
+            (add-tx-watcher tx)
             (notifications/request-permission)
-            {::set-referrer-decision "accept"}))
+            {::set-wtach-tx          tx
+             ::set-referrer-decision "accept"}))
 
 (fx/defn advertiser-decide
   {:events [::advertiser-decision]}
@@ -157,13 +181,17 @@
 (fx/defn has-referrer
   {:events [::has-referrer]}
   [{:keys [db]} decision referrer]
-  (when (and referrer (nil? decision))
-    {:db       (assoc-in db [:acquisition :referrer] referrer)
-     :http-get {:url                   (get-url :clicks referrer)
-                :success-event-creator (fn [response]
-                                         [::referrer-registered referrer (types/json->clj response)])
-                :failure-event-creator (fn [error]
-                                         [::on-error (:error (types/json->clj error))])}}))
+  (when referrer
+    (cond
+      (nil? decision)
+      {:db       (assoc-in db [:acquisition :referrer] referrer)
+       :http-get {:url                   (get-url :clicks referrer)
+                  :success-event-creator (fn [response]
+                                           [::referrer-registered referrer (types/json->clj response)])
+                  :failure-event-creator (fn [error]
+                                           [::on-error (:error (types/json->clj error))])}}
+      (= "accept" decision)
+      {::check-tx-state nil})))
 
 (fx/defn app-setup
   {}
