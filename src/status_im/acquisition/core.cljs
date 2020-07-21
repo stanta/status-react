@@ -135,6 +135,7 @@
                                             :on-trigger
                                             (fn []
                                               {:dispatch [::success-tx-received]})})
+            (notifications/request-permission)
             {::set-referrer-decision "accept"}))
 
 (fx/defn advertiser-decide

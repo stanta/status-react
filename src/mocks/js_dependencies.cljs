@@ -186,7 +186,8 @@
   #js {:getInstallReferrer identity})
 
 (def react-native-push-notification
-  #js {:localNotification identity})
+  #js {:localNotification identity
+       :requestPermission identity})
 
 ;; Update i18n_resources.cljs
 (defn mock [module]
