@@ -567,6 +567,8 @@
     "advertiser-starter-pack-description": "Welcome to Status! Here is some crypto to get you started",
     "advertiser-starter-pack-accept": "Accept",
     "advertiser-starter-pack-decline": "Decline",
+    "starter-pack-received": "Starter Pack received",
+    "starter-pack-received-description": "Here’s some crypto to get you started! Use it to get stickers, an ENS name and try dapps",
     "join-group-chat": "Join group",
     "join-group-chat-description": "{{username}} invited you to join the group {{group-name}}",
     "joined-group-chat-description": "You've joined {{group-name}} from invitation by {{username}}",

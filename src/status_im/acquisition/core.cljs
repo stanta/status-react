@@ -2,6 +2,7 @@
   (:require [clojure.string :as cstr]
             [re-frame.core :as re-frame]
             [reagent.ratom :refer [make-reaction]]
+            [status-im.i18n :as i18n]
             [status-im.utils.fx :as fx]
             [status-im.ethereum.json-rpc :as json-rpc]
             [status-im.popover.core :as popover]
@@ -10,6 +11,8 @@
             [status-im.ethereum.core :as ethereum]
             [status-im.ethereum.contracts :as contracts]
             [status-im.utils.money :as money]
+            [status-im.ethereum.transactions.core :as transaction]
+            [status-im.notifications.core :as notifications]
             [taoensso.timbre :as log]
             ["react-native-device-info" :refer [getInstallReferrer]]
             ["@react-native-community/async-storage" :default async-storage]))
@@ -115,10 +118,24 @@
                 (popover/show-popover {:prevent-closing? true
                                        :view             :accept-invite})))))
 
+(fx/defn success-tx-received
+  {:events [::success-tx-received]}
+  [_]
+  {::notifications/local-notification {:title   (i18n/label :t/starter-pack-received)
+                                       :message (i18n/label :t/starter-pack-received-description)}})
+
 (fx/defn success-advertiser-claim
   {:events [::success-advertiser-claim]}
-  [_]
-  {::set-referrer-decision "accept"})
+  [cofx {:keys [tx]}]
+  (fx/merge cofx
+            ;; TODO(Ferossgp): Watches are not persistent,
+            ;; in case of app restart we should check and re add watch
+            (transaction/watch-transaction tx
+                                           {:trigger-fn (constantly true)
+                                            :on-trigger
+                                            (fn []
+                                              {:dispatch [::success-tx-received]})})
+            {::set-referrer-decision "accept"}))
 
 (fx/defn advertiser-decide
   {:events [::advertiser-decision]}
@@ -168,7 +185,7 @@
                  :success-event-creator (fn [response]
                                           [on-success (types/json->clj (get response :response-body))])
                  :failure-event-creator (fn [error]
-                                          [::on-error (types/json->clj (get error :response-body))])}}))
+                                          [::on-error (:error (types/json->clj (get error :response-body)))])}}))
 ;; Starter pack
 
 (fx/defn get-starter-pack-amount

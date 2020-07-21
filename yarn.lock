@@ -1336,6 +1336,13 @@
   resolved "https://registry.yarnpkg.com/@react-native-community/netinfo/-/netinfo-4.7.0.tgz#7482d36836cac69d0a0ae25581f65bc472639930"
   integrity sha512-a/sDB+AsLEUNmhAUlAaTYeXKyQdFGBUfatqKkX5jluBo2CB3OAuTHfm7rSjcaLB9EmG5iSq3fOTpync2E7EYTA==
 
+"@react-native-community/push-notification-ios@^1.2.2", "@react-native-community/push-notification-ios@^1.4.0":
+  version "1.4.0"
+  resolved "https://registry.yarnpkg.com/@react-native-community/push-notification-ios/-/push-notification-ios-1.4.0.tgz#e1781e60fb8a2569547e3f1613c62e1c3b46960c"
+  integrity sha512-YnfxtAuHkiuvprh1d9npGZVwOrso6sys8+w8XY6RQAs8kD2LHZg0C8rA5gfX4jW/GrQV7m14Y6ngciE6Rpd91w==
+  dependencies:
+    invariant "^2.2.4"
+
 "@react-navigation/bottom-tabs@^5.7.0":
   version "5.7.1"
   resolved "https://registry.yarnpkg.com/@react-navigation/bottom-tabs/-/bottom-tabs-5.7.1.tgz#d6b4e61676f8b4ab11864e792c819c56fde32a44"
@@ -6577,6 +6584,13 @@ react-native-navigation-bar-color@^2.0.1:
   version "2.0.1"
   resolved "https://registry.yarnpkg.com/react-native-navigation-bar-color/-/react-native-navigation-bar-color-2.0.1.tgz#ee2be25cc37105f7da355717b0a9a32c9c059ae6"
   integrity sha512-1kE/oxWt+HYjRxdZdvke9tJ365xaee5n3+euOQA1En8zQuSbOxiE4SYEGM7TeaWnmLJ0l37mRnPHaB2H4mGh0A==
+
+react-native-push-notification@^4.0.0:
+  version "4.0.0"
+  resolved "https://registry.yarnpkg.com/react-native-push-notification/-/react-native-push-notification-4.0.0.tgz#85c795abef6ddbdbed039ca6a5ffcedc0f36d0dd"
+  integrity sha512-PwFxGupwlAKc8qz8nMhX9U+/En/kiEH/1cyuKvUQdMa+tx96xZ/t81RTyOkkehkx4lbsI+Tv2F+D+fJV9IQb+A==
+  dependencies:
+    "@react-native-community/push-notification-ios" "^1.2.2"
 
 react-native-reanimated@^1.7.0:
   version "1.8.0"
