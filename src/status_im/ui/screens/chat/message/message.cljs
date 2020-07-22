@@ -91,7 +91,7 @@
                                  outgoing colors/mention-outgoing
                                  :else colors/mention-incoming)}
                 :on-press (when-not (= content-type constants/content-type-system-text)
-                            #(re-frame/dispatch [:chat.ui/start-chat literal {:navigation-reset? true}]))}
+                            #(re-frame/dispatch [:chat.ui/start-chat literal]))}
                [mention-element literal]])
     "status-tag"
     (conj acc [react/text-class

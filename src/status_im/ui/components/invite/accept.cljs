@@ -6,7 +6,8 @@
             [status-im.i18n :as i18n]
             [status-im.ui.components.invite.events :as invite]
             [quo.design-system.colors :as colors]
-            [status-im.acquisition.core :as acquisition]))
+            [status-im.acquisition.core :as acquisition]
+            [status-im.acquisition.advertiser :as advertiser]))
 
 (defn perk [{name             :name
              {source :source} :icon} value]
@@ -80,10 +81,10 @@
            ^{:key (:name k)}
            [perk k v])]
         [rn/view {:style {:margin-vertical 8}}
-         [quo/button {:on-press #(re-frame/dispatch [::acquisition/advertiser-decision :accept])}
+         [quo/button {:on-press #(re-frame/dispatch [::advertiser/decision :accept])}
           (i18n/label :t/advertiser-starter-pack-accept)]]
         [quo/button {:type     :secondary
-                     :on-press #(re-frame/dispatch [::acquisition/advertiser-decision :decline])}
+                     :on-press #(re-frame/dispatch [::advertiser/decision :decline])}
          (i18n/label :t/advertiser-starter-pack-decline)]
         [rn/view {:padding-vertical 8}
          [quo/text {:color :secondary

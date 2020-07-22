@@ -2,33 +2,18 @@
   (:require [clojure.string :as cstr]
             [re-frame.core :as re-frame]
             [reagent.ratom :refer [make-reaction]]
-            [status-im.i18n :as i18n]
             [status-im.utils.fx :as fx]
             [status-im.ethereum.json-rpc :as json-rpc]
-            [status-im.popover.core :as popover]
-            [status-im.waku.core :as waku]
-            [status-im.utils.types :as types]
-            [status-im.ethereum.core :as ethereum]
             [status-im.ethereum.contracts :as contracts]
             [status-im.utils.money :as money]
-            [status-im.ethereum.transactions.core :as transaction]
-            [status-im.notifications.core :as notifications]
-            [taoensso.timbre :as log]
-            ["react-native-device-info" :refer [getInstallReferrer]]
-            ["@react-native-community/async-storage" :default async-storage]))
+            [status-im.acquisition.chat :as chat]
+            [status-im.acquisition.advertiser :as advertiser]
+            [status-im.acquisition.persistance :as persistence]
+            [status-im.acquisition.gateway :as gateway]
+            ["react-native-device-info" :refer [getInstallReferrer]]))
 
-(def advertiser-type "acquisition/advertiser")
-(def tx-store-key "acquisition/watch-tx")
-
-(def acquisition-gateway "https://test-referral.status.im")
-
-(def acquisition-routes {:clicks        (str acquisition-gateway "/clicks")
-                         :registrations (str acquisition-gateway "/registrations")})
-
-(defn get-url [type referral]
-  (if (= type :clicks)
-    (str (get acquisition-routes :clicks) "/" referral)
-    (get acquisition-routes :registrations)))
+(def advertiser-type "advertiser")
+(def chat-type "chat")
 
 (defn- split-param [param]
   (->
@@ -55,86 +40,26 @@
   [referrer]
   (-> referrer query->map (get "referrer")))
 
-(def referrer-decision-key "referrer-decision")
-
-(fx/defn handle-error
-  {:events [::on-error]}
-  [_ error]
-  {:utils/show-popup {:title   "Request failed"
-                      :content (str error)}})
-
-(fx/defn handle-acquisition
-  {:events [::handle-acquisition]}
-  [{:keys [db] :as cofx} {:keys [message on-success method url]}]
-  (let [msg (types/clj->json message)]
-    {::json-rpc/call [{:method     (json-rpc/call-ext-method (waku/enabled? cofx) "signMessageWithChatKey")
-                       :params     [msg]
-                       :on-error   #(re-frame/dispatch [::on-error "Could not sign message"])
-                       :on-success #(re-frame/dispatch [::call-acquisition-gateway
-                                                        {:chat-key   (get-in db [:multiaccount :public-key])
-                                                         :message    msg
-                                                         :method     method
-                                                         :url        url
-                                                         :on-success on-success} %])}]}))
-
 (fx/defn handle-registration
   [cofx {:keys [message on-success]}]
-  (handle-acquisition cofx {:message    message
-                            :on-success on-success
-                            :method     "POST"
-                            :url        (get-url :registrations nil)}))
-
-(re-frame/reg-fx
- ::set-referrer-decision
- (fn [decision]
-   (-> ^js async-storage
-       (.setItem referrer-decision-key decision)
-       (.catch (fn [error]
-                 (log/error "[async-storage]" error))))))
-
-(re-frame/reg-fx
- ::set-wtach-tx
- (fn [tx]
-   (-> ^js async-storage
-       (.setItem tx-store-key tx)
-       (.catch (fn [error]
-                 (log/error "[async-storage]" error))))))
-
-(fx/defn add-tx-watcher
-  [cofx tx]
-  (transaction/watch-transaction cofx
-                                 tx
-                                 {:trigger-fn (constantly true)
-                                  :on-trigger
-                                  (fn []
-                                    {:dispatch [::success-tx-received]})}))
-
-(re-frame/reg-fx
- ::check-tx-state
- (fn []
-   (-> ^js async-storage
-       (.getItem tx-store-key)
-       (.then (fn [^js tx]
-                (when-not (nil? tx)
-                  (re-frame/dispatch [::add-tx-watcher tx]))))
-       (.catch (fn [error]
-                 (log/error "[async-storage]" error))))))
+  (gateway/handle-acquisition cofx
+                              {:message    message
+                               :on-success on-success
+                               :method     "POST"
+                               :url        (gateway/get-url :registrations nil)}))
 
 (re-frame/reg-fx
  ::get-referrer
  (fn [external-referrer]
-   (-> ^js async-storage
-       (.getItem referrer-decision-key)
-       (.then (fn [^js data]
-                (if external-referrer
-                  (re-frame/dispatch [::has-referrer data external-referrer])
-                  (-> (getInstallReferrer)
-                      (.then (fn [install-referrer]
-                               (when (and (seq (parse-referrer install-referrer))
-                                          (not= install-referrer "unknown"))
-                                 (re-frame/dispatch [::has-referrer data  (parse-referrer install-referrer)]))))))))
-       (.catch (fn [error]
-                 (log/error "[async-storage]" error))))))
+   (persistence/get-referrer-decision
+    (fn [^js data]
+      (if external-referrer
+        (re-frame/dispatch [::has-referrer data external-referrer])
+        (-> (getInstallReferrer)
+            (.then (fn [install-referrer]
+                     (when (and (seq (parse-referrer install-referrer))
+                                (not= install-referrer "unknown"))
+                       (re-frame/dispatch [::has-referrer data  (parse-referrer install-referrer)]))))))))))
 
 (fx/defn referrer-registered
   {:events [::referrer-registered]}
@@ -142,79 +67,36 @@
   (when-not attributed
     (fx/merge cofx
               {:db (assoc-in db [:acquisition :metadata] referrer-meta)}
-              (when (= type advertiser-type)
-                (popover/show-popover {:prevent-closing? true
-                                       :view             :accept-invite})))))
+              (cond
+                (= type advertiser-type)
+                (advertiser/start-acquisition referrer-meta)
 
-(fx/defn success-tx-received
-  {:events [::success-tx-received]}
-  [_]
-  {::set-referrer-decision            "claimed"
-   ::notifications/local-notification {:title   (i18n/label :t/starter-pack-received)
-                                       :message (i18n/label :t/starter-pack-received-description)}})
-
-(fx/defn success-advertiser-claim
-  {:events [::success-advertiser-claim]}
-  [cofx {:keys [tx]}]
-  (fx/merge cofx
-            (add-tx-watcher tx)
-            (notifications/request-permission)
-            {::set-wtach-tx          tx
-             ::set-referrer-decision "accept"}))
-
-(fx/defn advertiser-decide
-  {:events [::advertiser-decision]}
-  [{:keys [db] :as cofx} decision]
-  (let [referral (get-in db [:acquisition :referrer])
-        payload  {:chat_key    (get-in db [:multiaccount :public-key])
-                  :address     (ethereum/default-address db)
-                  :invite_code referral}]
-    (fx/merge cofx
-              (if (= decision :accept)
-                (handle-acquisition {:message    payload
-                                     :method     "PATCH"
-                                     :url        (get-url :clicks referral)
-                                     :on-success ::success-advertiser-claim})
-                {::set-referrer-decision "decline"})
-              (popover/hide-popover))))
+                (= type chat-type)
+                (chat/start-acquisition referrer-meta)))))
 
 (fx/defn has-referrer
   {:events [::has-referrer]}
-  [{:keys [db]} decision referrer]
+  [{:keys [db] :as cofx} decision referrer]
   (when referrer
     (cond
       (nil? decision)
-      {:db       (assoc-in db [:acquisition :referrer] referrer)
-       :http-get {:url                   (get-url :clicks referrer)
-                  :success-event-creator (fn [response]
-                                           [::referrer-registered referrer (types/json->clj response)])
-                  :failure-event-creator (fn [error]
-                                           [::on-error (:error (types/json->clj error))])}}
+      (fx/merge cofx
+                {:db (assoc-in db [:acquisition :referrer] referrer)}
+                (gateway/get-referrer
+                 referrer
+                 (fn [resp]
+                   [::referrer-registered referrer resp])))
+
       (= "accept" decision)
-      {::check-tx-state nil})))
+      {::persistence/check-tx-state (fn [tx]
+                                      (when-not (nil? tx)
+                                        (re-frame/dispatch [::add-tx-watcher tx])))})))
 
 (fx/defn app-setup
   {}
   [_]
   {::get-referrer nil})
 
-(fx/defn call-acquisition-gateway
-  {:events [::call-acquisition-gateway]}
-  [cofx
-   {:keys [chat-key message on-success type url method] :as kek}
-   sig]
-  (let [payload {:chat_key chat-key
-                 :msg      message
-                 :sig      sig
-                 :version  2}]
-    {:http-post {:url                   url
-                 :opts                  {:headers {"Content-Type" "application/json"}
-                                         :method  method}
-                 :data                  (types/clj->json payload)
-                 :success-event-creator (fn [response]
-                                          [on-success (types/json->clj (get response :response-body))])
-                 :failure-event-creator (fn [error]
-                                          [::on-error (:error (types/json->clj (get error :response-body)))])}}))
 ;; Starter pack
 
 (fx/defn get-starter-pack-amount
